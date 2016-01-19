@@ -11,11 +11,19 @@ import pygame
 from pygame.locals import *
 from sys import exit
 from sprite import Sprite
+from client import Client
+import threading
+import time
 
 
 class Game():
     def __init__(self):
         pygame.init()
+        # network
+        self.client = Client()
+        netThread = threading.Thread(target=self.update_network)
+        netThread.start()
+        
         self.screen = pygame.display.set_mode((1024, 768), 0, 32)
         self.peixe = Sprite(self, sprite_image_filename)
         self.load()
@@ -39,5 +47,10 @@ class Game():
         self.peixe.draw()
         
         pygame.display.update()
+        
+    def update_network(self):
+        self.client.update("conectei")
+        time.sleep(0.5)
+        self.update_network()
 
 Game()

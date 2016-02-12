@@ -14,6 +14,10 @@ from sprite import Sprite
 from client import Client
 import threading
 import time
+import json
+
+
+pos = (0,0)
 
 
 class Game():
@@ -34,6 +38,7 @@ class Game():
         self.update()
         
     def update(self):
+        global pos
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -41,6 +46,7 @@ class Game():
                     exit()
                     
             self.draw()
+            pos = self.peixe.position.value
                     
     def draw(self):
         self.screen.blit(self.background, (0,0))
@@ -49,7 +55,8 @@ class Game():
         pygame.display.update()
         
     def update_network(self):
-        self.client.update("conectei")
+        data = {'id': 'jogador1', 'pos': pos}
+        self.client.update(json.dumps(data))
         time.sleep(0.5)
         self.update_network()
 

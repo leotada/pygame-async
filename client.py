@@ -1,5 +1,5 @@
 import socket
-import sys
+import asyncio
 
 HOST, PORT = "localhost", 9999
 

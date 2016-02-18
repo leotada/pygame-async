@@ -1,17 +1,41 @@
 import asyncio
+import json
+from gameobjects.vector2 import Vector2
+
+connected_clients = 0
+clients = {}
+
+
+class Client(object):
+    def __init__(self, id):
+        self.id = id
+        self.pos = [0, 0]
+        
 
 class EchoServerClientProtocol(asyncio.Protocol):
     def connection_made(self, transport):
         peername = transport.get_extra_info('peername')
+        global connected_clients
+        connected_clients += 1
         print('Connection from {}'.format(peername))
+        print('Clientes conectados: {}'.format(connected_clients))
         self.transport = transport
 
     def data_received(self, data):
-        message = data.decode()
-        print('Data received: {!r}'.format(message))
+        global clients
+        #~ import pdb; pdb.set_trace()
+        message = json.loads(data.decode())
+        #print('Data received: {!r}'.format(message))
+        
+        # login
+        if message['action'] == 'login':
+            clients[message['id']] = Client(message['id'])
+        elif message['action'] == 'update':
+            clients[message['id']].pos = message['pos']
 
-        print('Send: {!r}'.format(message))
-        self.transport.write(data)
+        #print('Send: {!r}'.format(message))
+        data = json.dumps([v.__dict__ for v in clients.values()])
+        self.transport.write(bytes(data, "utf-8"))
 
         #print('Close the client socket')
         #self.transport.close()

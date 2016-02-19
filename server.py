@@ -23,22 +23,35 @@ class EchoServerClientProtocol(asyncio.Protocol):
 
     def data_received(self, data):
         global clients
-        #~ import pdb; pdb.set_trace()
         message = json.loads(data.decode())
         #print('Data received: {!r}'.format(message))
         
+        assert 'id' in message
+        player_id = message['id']
         # login
         if message['action'] == 'login':
-            clients[message['id']] = Client(message['id'])
-        elif message['action'] == 'update':
-            clients[message['id']].pos = message['pos']
+            clients[player_id] = Client(player_id)
+            self.player_id = player_id
+            self.transport.write(bytes('accepted', "utf-8"))
+        # already logged
+        elif player_id in clients:
+            if message['action'] == 'update':
+                clients[player_id].pos = message['pos']
 
-        #print('Send: {!r}'.format(message))
-        data = json.dumps([v.__dict__ for v in clients.values()])
-        self.transport.write(bytes(data, "utf-8"))
-
-        #print('Close the client socket')
-        #self.transport.close()
+            #print('Send: {!r}'.format(message))
+            data = json.dumps([v.__dict__ for v in clients.values()])
+            self.transport.write(bytes(data, "utf-8"))
+        else:
+            print('Close the client socket')
+            self.transport.close()
+        
+    def __del__(self):
+        global clients, connected_clients
+        try:
+            del clients[self.player_id]
+        except AttributeError:
+            pass
+        connected_clients -= 1
 
 loop = asyncio.get_event_loop()
 # Each client connection will create a new protocol instance

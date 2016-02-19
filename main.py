@@ -35,12 +35,11 @@ class Game():
         netThread.start()
         
         self.screen = pygame.display.set_mode((1024, 768), 0, 32)
-        #self.peixe = Sprite(self, sprite_image_filename)
         self.load()
         
     def load(self):
         self.background = pygame.image.load(background_image_filename).convert()
-        #self.peixe.load()
+        self.image = pygame.image.load(sprite_image_filename).convert_alpha()
         self.update()
         
     def update(self):
@@ -56,24 +55,22 @@ class Game():
                     
     def draw(self):
         self.screen.blit(self.background, (0,0))
-        #self.peixe.draw()
         
         # network data draw
         if network_received is not None:
-            received = json.loads(network_received)
-            for player in received:
-                xe = Sprite(self, sprite_image_filename)
-                xe.load()
-                xe.position = Vector2(player['pos'][0], player['pos'][1])
-                xe.draw()
+            for player in network_received:
+                sp = Sprite(self, sprite_image_filename)
+                sp.image = self.image
+                sp.position = Vector2(player['pos'][0], player['pos'][1])
+                sp.draw()
         
         pygame.display.update()
         
     def update_network(self):
         global network_received
-        data = {'action': 'update', 'id': username, 'pos': pos}
-        network_received = self.network.update(json.dumps(data))
-        time.sleep(0.5)
-        return self.update_network()
+        while True:
+            data = {'action': 'update', 'id': username, 'pos': pos}
+            network_received = json.loads(self.network.update(json.dumps(data)))
+            time.sleep(0.05)
 
 Game()
